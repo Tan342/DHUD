@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Video/Canvas Demo 2</title>
+      <script> 
+         document.addEventListener('DOMContentLoaded', function(){
+         	var v = document.getElementById('v');
+         	var canvas = document.getElementById('c');
+         var context = canvas.getContext('2d');
+         var back = document.createElement('canvas');
+         var backcontext = back.getContext('2d');
+         var cw,ch;
+         
+         v.addEventListener('play', function(){
+           	cw = v.clientWidth;
+         ch = v.clientHeight;
+         canvas.width = cw;
+         canvas.height = ch;
+         back.width = cw;
+         back.height = ch;
+         draw(v,context,backcontext,cw,ch);
+               },false);
+           },false);
+         
+         function draw(v,c,bc,w,h) {
+         if(v.paused || v.ended)	return false;
+         // First, draw it into the backing canvas
+         bc.drawImage(v,0,0,w,h);
+         // Grab the pixel data from the backing canvas
+         var idata = bc.getImageData(0,0,w,h);
+         var data = idata.data;
+         
+         var wdata = bc.getImageData(0,0,w,h); 
+         var w_data = wdata.data;
+         
+         var row = 4*w;
+         var row_n = 4*w*h-4*w;
+         
+         var W = [ 0, 1, 0, 1, -4, 1, 0, 1,0 ]
+         var d = [-(row+4), -row, -(row-4),
+         			-4, 0, 4,
+                    row-4, row, row+4]
+                    
+         for(var i = 0; i < data.length; i+=1) {
+         	if(i>=row || i<=row_n || i%row != 0 || i%4*row != (w-1) || i%4 != 3){
+            	
+            var temp = 0;
+            for(var j = 0; j < 9; j++){
+            	temp = temp + data[i+d[j]] * W[j];
+            }
+          
+            w_data[i] = temp;    
+          }
+         }
+         
+          for(var i = 0; i < data.length; i+=1){
+         	if( i%4 != 3 ){
+            	data[i] = 127 - w_data[i];
+           }
+          }
+          
+         idata.data = data;
+         // Draw the pixels onto the visible canvas
+         c.putImageData(idata,0,0);
+         // Start over!
+         setTimeout(draw,20,v,c,bc,w,h);
+         }
+      </script> 
+   </head>
+   <body>
+      <video id="v" controls="" loop="">
+         <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+         <source src="video.ogg" type="video/ogg">
+         <source src="video.mp4" type="video/mp4">
+      </video>
+      <canvas id="c" width="480" height="360"></canvas>
+      <style> 
+         #c {
+         position: absolute;
+         top: 50%;
+         left: 50%;
+         margin: -180px 0 0 20px;
+         }
+         #v {
+         position: absolute;
+         top: 50%;
+         left: 50%;
+         margin: -180px 0 0 -500px;
+         }
+      </style>
+   </body>
+</html>
